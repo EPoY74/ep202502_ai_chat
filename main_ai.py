@@ -5,7 +5,8 @@ epoy74@gmail.com
 +7 952 517 4228
 """
 
-from openai import OpenAI
+from openai import(OpenAI,
+                   APIStatusError)
 
 import settings_sec
 
@@ -14,14 +15,29 @@ sec_base_url=settings_sec.BASE_URL
 model_ai = "deefseek-chat"
 
 if __name__ == "__main__":
-    question:str = input("Свой вопрос: ") 
+    question:str = input("Введи свой вопрос: ") 
     client = OpenAI(api_key = sec_api_key, base_url=sec_base_url)
     while(question != "exit"):
-        responce = client.chat.completions.create(
-            model=model_ai,
-            messages=[
-                {"role":"system", "content":"Ты ученый, читающий лекцию студентам"},
-                {"role":"user", "content":question},
-            ]
-        )
-        question = input("Введи свой вопрос(exit для выхода): ")
+        try:
+            responce = client.chat.completions.create(
+                model=model_ai,
+                messages=[
+                    {"role":"system", "content":"Ты ученый, читающий лекцию студентам"},
+                    {"role":"user", "content":question},
+                ]
+                
+            )
+            print(responce.choices[0].message.content)
+            question = input("Введи свой вопрос(exit для выхода): ")
+        except APIStatusError as err:
+            # print("Ошибка: ", str(err))
+            err_responce = err.response.json()
+            err_code = str(err.response.status_code)
+            err_type_code:str = err_responce["error"]["code"]
+            err_message:str = err_responce["error"]["message"]
+            # raise err 
+            print("Код ошибки: ", err_code)
+            print("Текстовый код ошибки: ", err_type_code)
+            print("Текст ошибки: ",  err_message)
+                        
+            exit(1)
